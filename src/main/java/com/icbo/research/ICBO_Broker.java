@@ -37,7 +37,17 @@ public class ICBO_Broker extends CBO_Broker {
     private int currentIteration = 0;
 
     /**
-     * 构造函数
+     * 构造函数（带随机种子）
+     * @param simulation CloudSim仿真实例
+     * @param seed 随机种子
+     */
+    public ICBO_Broker(CloudSimPlus simulation, long seed) {
+        super(simulation, seed);
+    }
+
+    /**
+     * 构造函数（向后兼容，使用默认种子42）
+     * @param simulation CloudSim仿真实例
      */
     public ICBO_Broker(CloudSimPlus simulation) {
         super(simulation);

@@ -1,5 +1,6 @@
 package com.icbo.research;
 
+import com.icbo.research.utils.ConvergenceRecord;
 import org.cloudsimplus.brokers.DatacenterBrokerSimple;
 import org.cloudsimplus.cloudlets.Cloudlet;
 import org.cloudsimplus.core.CloudSimPlus;
@@ -33,6 +34,7 @@ public class CBO_Broker extends DatacenterBrokerSimple {
     protected static final int POPULATION_SIZE = 30;      // 种群大小
     protected static final int MAX_ITERATIONS = 100;      // 最大迭代次数
     protected final Random random;
+    protected final long seed;  // 随机种子
 
     // CBO种群：每个个体是一个调度方案（连续空间 [0,1]）
     protected double[][] population;      // population[i][j]: 第i个个体，第j个任务的位置
@@ -40,17 +42,31 @@ public class CBO_Broker extends DatacenterBrokerSimple {
     protected double[] bestSolution;      // 全局最优解（连续空间）
     protected double bestFitness;         // 全局最优适应度
 
+    // ✅ Phase 3新增：收敛曲线记录
+    protected ConvergenceRecord convergenceRecord;
+
     // 调度结果缓存
     private Map<Long, Vm> cloudletVmMapping;  // cloudletId -> Vm
     private boolean schedulingDone = false;
 
     /**
-     * 构造函数
+     * 构造函数（带随机种子）
+     * @param simulation CloudSim仿真实例
+     * @param seed 随机种子
+     */
+    public CBO_Broker(CloudSimPlus simulation, long seed) {
+        super(simulation);
+        this.seed = seed;
+        this.random = new Random(seed);
+        this.cloudletVmMapping = new HashMap<>();
+    }
+
+    /**
+     * 构造函数（向后兼容，使用默认种子42）
+     * @param simulation CloudSim仿真实例
      */
     public CBO_Broker(CloudSimPlus simulation) {
-        super(simulation);
-        this.random = new Random(42);  // 固定种子确保可复现性
-        this.cloudletVmMapping = new HashMap<>();
+        this(simulation, 42L);
     }
 
     /**
@@ -119,6 +135,10 @@ public class CBO_Broker extends DatacenterBrokerSimple {
         int M = cloudletList.size();  // 任务数
         int N = vmList.size();        // VM数
 
+        // ✅ Phase 3：创建收敛记录器
+        String scale = String.format("M%d", M);
+        this.convergenceRecord = new ConvergenceRecord("CBO", scale, this.seed);
+
         // 初始化种群
         initializePopulation(M, N, cloudletList, vmList);
 
@@ -135,6 +155,9 @@ public class CBO_Broker extends DatacenterBrokerSimple {
 
             // 更新全局最优解
             updateBestSolution(M, N, cloudletList, vmList);
+
+            // ✅ Phase 3：记录收敛曲线
+            convergenceRecord.recordIteration(t, bestFitness);
 
             // 每10次迭代打印进度
             if ((t + 1) % 10 == 0 || t == 0) {
@@ -376,5 +399,13 @@ public class CBO_Broker extends DatacenterBrokerSimple {
             }
         }
         return discrete;
+    }
+
+    /**
+     * ✅ Phase 3：获取收敛记录
+     * @return 收敛记录对象，如果尚未运行优化则返回null
+     */
+    public ConvergenceRecord getConvergenceRecord() {
+        return convergenceRecord;
     }
 }

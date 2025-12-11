@@ -48,3 +48,8 @@ hs_err_pid*
 *.swp
 *.swo
 *~
+
+# Experimental Results
+results/*.csv
+results/*.png
+!results/.gitkeep
