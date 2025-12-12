@@ -1,5 +1,6 @@
 package com.icbo.research;
 
+import com.icbo.research.utils.ConvergenceRecord;
 import org.cloudsimplus.brokers.DatacenterBrokerSimple;
 import org.cloudsimplus.cloudlets.Cloudlet;
 import org.cloudsimplus.core.CloudSimPlus;
@@ -41,6 +42,7 @@ public class PSO_Broker extends DatacenterBrokerSimple {
 
     protected final Random random;
     protected final long seed;
+    private ConvergenceRecord convergenceRecord;  // ✅ Day 3.1新增：收敛记录器
 
     /**
      * 构造函数（带随机种子）
@@ -114,6 +116,10 @@ public class PSO_Broker extends DatacenterBrokerSimple {
         double[] gBest = new double[M];                             // 全局最优位置
         double gBestFitness = Double.MAX_VALUE;                     // 全局最优适应度
 
+        // ✅ Day 3.1新增：创建收敛记录器
+        String scale = String.format("M%d", M);
+        this.convergenceRecord = new ConvergenceRecord("PSO", scale, this.seed);
+
         // 初始化粒子位置和速度
         for (int i = 0; i < POPULATION_SIZE; i++) {
             for (int j = 0; j < M; j++) {
@@ -175,12 +181,18 @@ public class PSO_Broker extends DatacenterBrokerSimple {
                 }
             }
 
+            // ✅ Day 3.1新增：记录收敛曲线
+            convergenceRecord.recordIteration(iter, gBestFitness);
+
             // 每20次迭代打印一次进度
             if ((iter + 1) % 20 == 0 || iter == 0) {
                 System.out.println(String.format("Iter %3d/%d: gBest Makespan = %.4f, w = %.4f",
                         iter + 1, MAX_ITERATIONS, gBestFitness, w));
             }
         }
+
+        // ✅ Day 3.1新增：导出收敛曲线到CSV
+        convergenceRecord.exportToCSV("results/");
 
         // 将全局最优连续解转换为离散调度方案
         return continuousToDiscrete(gBest, N);

@@ -1,0 +1,56 @@
+% Friedman Test Results
+\begin{table}[htbp]
+\centering
+\caption{Friedman Test Results for Algorithm Comparison}
+\label{tab:friedman}
+\begin{tabular}{lc}
+\hline
+\textbf{Metric} & \textbf{Value} \\
+\hline
+$\chi^2$ & 10122.0000 \\
+$p$-value & 0.0000e+00 \\
+Significance & Yes*** \\
+Critical Difference & 3.4052 \\
+\hline
+\end{tabular}
+\end{table}
+
+% Average Ranks
+\begin{table}[htbp]
+\centering
+\caption{Average Ranks of Algorithms (Lower is Better)}
+\label{tab:ranks}
+\begin{tabular}{clc}
+\hline
+\textbf{Rank} & \textbf{Algorithm} & \textbf{Avg. Rank} \\
+\hline
+1 & Random & 7.0000 \\
+2 & PSO & 1.0000 \\
+3 & GWO & 3.0000 \\
+4 & WOA & 5.0000 \\
+5 & CBO & 6.0000 \\
+6 & ICBO & 4.0000 \\
+7 & ICBO-Enhanced & 2.0000 \\
+\hline
+\end{tabular}
+\end{table}
+
+% Pairwise Comparisons
+\begin{table}[htbp]
+\centering
+\caption{Pairwise Algorithm Comparisons (Wilcoxon + Cohen's d)}
+\label{tab:pairwise}
+\begin{tabular}{llccl}
+\hline
+\textbf{Algorithm 1} & \textbf{Algorithm 2} & \textbf{$p$-value} & \textbf{Cohen's $d$} & \textbf{Effect} \\
+\hline
+CBO & ICBO & 6.2546e-03 ** & 0.0888 & negligible \\
+CBO & ICBO-Enhanced & 1.1910e-03 ** & 0.1723 & negligible \\
+ICBO & ICBO-Enhanced & 6.3619e-03 ** & 0.0845 & negligible \\
+PSO & ICBO-Enhanced & 3.9173e-02 * & -0.0502 & negligible \\
+PSO & ICBO & 1.3676e-03 ** & -0.1341 & negligible \\
+Random & CBO & 3.7601e-05 *** & 0.3872 & small \\
+\hline
+\multicolumn{5}{l}{\footnotesize *** $p<0.001$, ** $p<0.01$, * $p<0.05$, ns: not significant} \\
+\end{tabular}
+\end{table}

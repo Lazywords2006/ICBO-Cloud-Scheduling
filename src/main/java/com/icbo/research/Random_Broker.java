@@ -1,5 +1,6 @@
 package com.icbo.research;
 
+import com.icbo.research.utils.ConvergenceRecord;
 import org.cloudsimplus.brokers.DatacenterBrokerSimple;
 import org.cloudsimplus.cloudlets.Cloudlet;
 import org.cloudsimplus.core.CloudSimPlus;
@@ -24,15 +25,18 @@ import java.util.*;
 public class Random_Broker extends DatacenterBrokerSimple {
 
     private final Random random;
+    private final long seed;  // ✅ Day 3.1新增：随机种子
     private Map<Long, Vm> cloudletVmMapping;  // cloudletId -> Vm
     private boolean schedulingDone = false;
+    private ConvergenceRecord convergenceRecord;  // ✅ Day 3.1新增：收敛记录器
 
     /**
      * 构造函数
      */
     public Random_Broker(CloudSimPlus simulation) {
         super(simulation);
-        this.random = new Random(42);  // 固定种子确保可复现性
+        this.seed = 42L;  // 固定种子确保可复现性
+        this.random = new Random(this.seed);
         this.cloudletVmMapping = new HashMap<>();
     }
 
@@ -43,6 +47,7 @@ public class Random_Broker extends DatacenterBrokerSimple {
      */
     public Random_Broker(CloudSimPlus simulation, long seed) {
         super(simulation);
+        this.seed = seed;
         this.random = new Random(seed);
         this.cloudletVmMapping = new HashMap<>();
     }
@@ -77,6 +82,10 @@ public class Random_Broker extends DatacenterBrokerSimple {
         int M = cloudletList.size();  // 任务数
         int N = vmList.size();        // VM数
 
+        // ✅ Day 3.1新增：创建收敛记录器
+        String scale = String.format("M%d", M);
+        this.convergenceRecord = new ConvergenceRecord("Random", scale, this.seed);
+
         System.out.println("\n==================== Random调度开始 ====================");
         System.out.println("任务数: " + M);
         System.out.println("VM数: " + N);
@@ -94,6 +103,10 @@ public class Random_Broker extends DatacenterBrokerSimple {
 
         // 计算预期Makespan（用于显示）
         double makespan = calculateMakespan(cloudletList, vmList);
+
+        // ✅ Day 3.1新增：记录"收敛曲线"（Random只有1次迭代）
+        convergenceRecord.recordIteration(0, makespan);
+        convergenceRecord.exportToCSV("results/");
 
         long endTime = System.currentTimeMillis();
 

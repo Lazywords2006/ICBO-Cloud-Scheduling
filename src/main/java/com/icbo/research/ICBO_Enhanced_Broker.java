@@ -231,6 +231,9 @@ public class ICBO_Enhanced_Broker extends ICBO_Broker {
         System.out.println("最终Makespan: " + bestFitness);
         System.out.println("========================================================\n");
 
+        // ✅ Day 3.1新增：导出收敛曲线到CSV
+        convergenceRecord.exportToCSV("results/");
+
         // 转换为离散调度方案
         int[] result = new int[M];
         for (int i = 0; i < M; i++) {

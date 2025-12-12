@@ -21,23 +21,56 @@ import java.util.List;
 public class BenchmarkRunner {
 
     /**
-     * 获取所有CEC2017基准函数（10个）
+     * 获取所有CEC2017基准函数（30个完整集合）
      *
      * @return 函数列表
      */
     public static List<BenchmarkFunction> getAllFunctions() {
         List<BenchmarkFunction> functions = new ArrayList<>();
 
-        functions.add(new Sphere(30));           // F1
-        functions.add(new Rosenbrock(30));       // F2
-        functions.add(new Rastrigin(30));        // F3
-        functions.add(new Griewank(30));         // F4
-        functions.add(new SixHumpCamel());       // F5 (2D)
-        functions.add(new Ackley(30));           // F6
-        functions.add(new Schwefel(30));         // F7
-        functions.add(new Zakharov(30));         // F8
-        functions.add(new SumSquares(30));       // F9
-        functions.add(new Powell(28));           // F10 (28D, 4的倍数)
+        // 基础单峰函数 (F1-F5)
+        functions.add(new Sphere(30));           // F1 - 最简单单峰
+        functions.add(new SumSquares(30));       // F2 - 加权球函数
+        functions.add(new Zakharov(30));         // F3 - Zakharov函数
+        functions.add(new Powell(28));           // F4 - Powell函数 (28D, 4的倍数)
+        functions.add(new Quartic(30));          // F5 - 四次函数
+
+        // 经典多峰函数 (F6-F10)
+        functions.add(new Rosenbrock(30));       // F6 - Rosenbrock函数
+        functions.add(new Rastrigin(30));        // F7 - Rastrigin函数
+        functions.add(new Griewank(30));         // F8 - Griewank函数
+        functions.add(new Ackley(30));           // F9 - Ackley函数
+        functions.add(new Schwefel(30));         // F10 - Schwefel函数
+
+        // 固定维度函数 (F11-F15)
+        functions.add(new SixHumpCamel());       // F11 - Six-Hump Camel (2D)
+        functions.add(new Levy(30));             // F12 - Levy函数
+        functions.add(new DixonPrice(30));       // F13 - Dixon-Price函数
+        functions.add(new Michalewicz(30));      // F14 - Michalewicz函数
+        functions.add(new StyblinskiTang(30));   // F15 - Styblinski-Tang函数
+
+        // 进阶多峰函数 (F16-F20)
+        functions.add(new Alpine(30));           // F16 - Alpine函数
+        functions.add(new Salomon(30));          // F17 - Salomon函数
+        functions.add(new XinSheYang(30));       // F18 - Xin-She Yang函数
+        functions.add(new HappyCat(30));         // F19 - Happy Cat函数
+        functions.add(new Periodic(30));         // F20 - Periodic函数
+
+        // 复杂景观函数 (F21-F25)
+        functions.add(new ExpandedSchafferF6(30)); // F21 - Expanded Schaffer F6
+        functions.add(new Weierstrass(30));        // F22 - Weierstrass函数
+        functions.add(new Pathological(30));       // F23 - Pathological函数
+        functions.add(new Exponential(30));        // F24 - Exponential函数
+        functions.add(new Step(30));               // F25 - Step函数
+
+        // 条件数相关函数 (F26-F28)
+        functions.add(new BentCigar(30));              // F26 - Bent Cigar函数
+        functions.add(new Discus(30));                 // F27 - Discus函数
+        functions.add(new HighConditionedElliptic(30)); // F28 - 高条件数椭球
+
+        // 混合函数 (F29-F30)
+        functions.add(new HybridFunction1(30));    // F29 - 混合函数1
+        functions.add(new HybridFunction2(30));    // F30 - 混合函数2
 
         return functions;
     }

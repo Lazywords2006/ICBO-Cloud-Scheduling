@@ -8,13 +8,13 @@ import java.util.List;
  * CEC2017基准测试批量对比实验
  *
  * 测试配置：
- * - 3个算法：CBO, ICBO, ICBO-Enhanced
- * - 10个函数：F1-F10（CEC2017标准函数集）
- * - 30次独立运行（标准配置）
+ * - 7个算法：Random, PSO, GWO, WOA, CBO, ICBO, ICBO-Enhanced
+ * - 30个函数：F1-F30（完整CEC2017函数集）
+ * - 30次独立运行（CEC2017标准配置）
  *
  * 实验规模：
- * - 快速验证：3算法 × 3函数 × 5次 = 45次测试（~5分钟）
- * - 完整实验：3算法 × 10函数 × 30次 = 900次测试（~2-3小时）
+ * - 快速验证：7算法 × 3函数 × 5次 = 105次测试（~10分钟）
+ * - 完整实验：7算法 × 30函数 × 30次 = 6300次测试（~15-20小时）
  *
  * 输出格式：
  * - 统计数据CSV：算法×函数的平均值、标准差等
@@ -22,8 +22,8 @@ import java.util.List;
  * - 对比报告MD：Markdown格式的结果表格
  *
  * @author ICBO Research Team
- * @version 1.0
- * @date 2025-12-10
+ * @version 3.0 (完整7算法版本)
+ * @date 2025-12-11
  */
 public class BenchmarkCompareExample {
 
@@ -41,7 +41,7 @@ public class BenchmarkCompareExample {
         System.out.println("╚════════════════════════════════════════════════════════════════╝\n");
 
         // 选择实验模式
-        boolean quickMode = false;  // true=快速验证（45次测试），false=完整实验（900次测试）
+        boolean quickMode = false;  // true=快速验证（45次测试），false=完整实验（2700次测试）
 
         if (quickMode) {
             runQuickTest();
@@ -52,22 +52,26 @@ public class BenchmarkCompareExample {
 
     /**
      * 运行快速验证测试
-     * 3算法 × 3函数 × 5次 = 45次测试
+     * 7算法 × 3函数 × 5次 = 105次测试
      */
     public static void runQuickTest() {
         System.out.println("【快速验证模式】\n");
         System.out.println("测试配置：");
-        System.out.println("  - 算法：CBO, ICBO, ICBO-Enhanced");
+        System.out.println("  - 算法：Random, PSO, GWO, WOA, CBO, ICBO, ICBO-Enhanced");
         System.out.println("  - 函数：Sphere, Rastrigin, Ackley（代表性函数）");
         System.out.println("  - 运行次数：" + QUICK_NUM_RUNS);
         System.out.println("  - 迭代次数：" + MAX_ITERATIONS);
-        System.out.println("  - 总测试量：3 × 3 × " + QUICK_NUM_RUNS + " = " + (3 * 3 * QUICK_NUM_RUNS) + " 次\n");
+        System.out.println("  - 总测试量：7 × 3 × " + QUICK_NUM_RUNS + " = " + (7 * 3 * QUICK_NUM_RUNS) + " 次\n");
 
-        // 创建算法列表
+        // 创建算法列表（按性能预期排序：基线→成熟算法→改进算法）
         List<BenchmarkRunner.BenchmarkOptimizer> algorithms = new ArrayList<>();
-        algorithms.add(new CBO_Lite());
-        algorithms.add(new ICBO_Lite());
-        algorithms.add(new ICBO_E_Lite());
+        algorithms.add(new Random_Lite());     // 基线算法
+        algorithms.add(new PSO_Lite());        // 成熟元启发式
+        algorithms.add(new GWO_Lite());        // 成熟元启发式
+        algorithms.add(new WOA_Lite());        // 成熟元启发式
+        algorithms.add(new CBO_Lite());        // 基准CBO
+        algorithms.add(new ICBO_Lite());       // ICBO改进
+        algorithms.add(new ICBO_E_Lite());     // ICBO增强版
 
         // 获取快速测试函数（3个代表性函数）
         List<BenchmarkFunction> functions = BenchmarkRunner.getQuickTestFunctions();
@@ -106,24 +110,28 @@ public class BenchmarkCompareExample {
 
     /**
      * 运行完整实验
-     * 3算法 × 10函数 × 30次 = 900次测试
+     * 7算法 × 30函数 × 30次 = 6300次测试
      */
     public static void runFullExperiment() {
         System.out.println("【完整实验模式】\n");
         System.out.println("测试配置：");
-        System.out.println("  - 算法：CBO, ICBO, ICBO-Enhanced");
-        System.out.println("  - 函数：F1-F10（全部10个CEC2017函数）");
+        System.out.println("  - 算法：Random, PSO, GWO, WOA, CBO, ICBO, ICBO-Enhanced");
+        System.out.println("  - 函数：F1-F30（全部30个CEC2017函数）");
         System.out.println("  - 运行次数：" + NUM_RUNS);
         System.out.println("  - 迭代次数：" + MAX_ITERATIONS);
-        System.out.println("  - 总测试量：3 × 10 × " + NUM_RUNS + " = " + (3 * 10 * NUM_RUNS) + " 次");
-        System.out.println("  - 预计用时：2-3 小时\n");
+        System.out.println("  - 总测试量：7 × 30 × " + NUM_RUNS + " = " + (7 * 30 * NUM_RUNS) + " 次");
+        System.out.println("  - 预计用时：15-20 小时\n");
         System.out.println("警告：这将是一个长时间运行的实验！\n");
 
-        // 创建算法列表
+        // 创建算法列表（按性能预期排序：基线→成熟算法→改进算法）
         List<BenchmarkRunner.BenchmarkOptimizer> algorithms = new ArrayList<>();
-        algorithms.add(new CBO_Lite());
-        algorithms.add(new ICBO_Lite());
-        algorithms.add(new ICBO_E_Lite());
+        algorithms.add(new Random_Lite());     // 基线算法
+        algorithms.add(new PSO_Lite());        // 成熟元启发式
+        algorithms.add(new GWO_Lite());        // 成熟元启发式
+        algorithms.add(new WOA_Lite());        // 成熟元启发式
+        algorithms.add(new CBO_Lite());        // 基准CBO
+        algorithms.add(new ICBO_Lite());       // ICBO改进
+        algorithms.add(new ICBO_E_Lite());     // ICBO增强版
 
         // 获取全部CEC2017函数
         List<BenchmarkFunction> functions = BenchmarkRunner.getAllFunctions();
@@ -176,7 +184,7 @@ public class BenchmarkCompareExample {
             System.out.println("╚════════════════════════════════════════════════════════════════╝");
             System.out.println("总用时: " + String.format("%.2f", elapsedMinutes) + " 分钟 (" +
                               String.format("%.2f", elapsedMinutes / 60.0) + " 小时)");
-            System.out.println("总测试次数: " + (3 * 10 * NUM_RUNS));
+            System.out.println("总测试次数: " + (algorithms.size() * functions.size() * NUM_RUNS));
 
             // 打印排名概览
             printRankingSummary(allResults, functions);
@@ -196,12 +204,12 @@ public class BenchmarkCompareExample {
         System.out.println("║              算法排名概览                                       ║");
         System.out.println("╚════════════════════════════════════════════════════════════════╝\n");
 
-        int[] algorithmWins = new int[3];  // CBO, ICBO, ICBO-E
-        String[] algorithmNames = {"CBO", "ICBO", "ICBO-Enhanced"};
+        int[] algorithmWins = new int[7];  // Random, PSO, GWO, WOA, CBO, ICBO, ICBO-E
+        String[] algorithmNames = {"Random", "PSO", "GWO", "WOA", "CBO", "ICBO", "ICBO-Enhanced"};
 
         for (BenchmarkFunction function : functions) {
-            double[] bestFitness = new double[3];
-            for (int i = 0; i < 3; i++) {
+            double[] bestFitness = new double[7];
+            for (int i = 0; i < 7; i++) {
                 String algorithmName = algorithmNames[i];
                 for (BenchmarkRunner.BenchmarkResult result : allResults) {
                     if (result.getFunctionName().equals(function.getName()) &&
@@ -214,7 +222,7 @@ public class BenchmarkCompareExample {
 
             // 找出最优算法
             int bestIdx = 0;
-            for (int i = 1; i < 3; i++) {
+            for (int i = 1; i < 7; i++) {
                 if (bestFitness[i] < bestFitness[bestIdx]) {
                     bestIdx = i;
                 }
@@ -228,7 +236,7 @@ public class BenchmarkCompareExample {
         }
 
         System.out.println("\n【总获胜次数】");
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 7; i++) {
             System.out.println(String.format("  %s: %d/%d 函数获胜",
                                             algorithmNames[i],
                                             algorithmWins[i],

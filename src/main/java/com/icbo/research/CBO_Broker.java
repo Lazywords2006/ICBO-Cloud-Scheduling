@@ -166,6 +166,9 @@ public class CBO_Broker extends DatacenterBrokerSimple {
             }
         }
 
+        // ✅ Day 3.1新增：导出收敛曲线到CSV
+        convergenceRecord.exportToCSV("results/");
+
         // 将最优解从连续空间转换为离散空间
         return continuousToDiscrete(bestSolution, N);
     }

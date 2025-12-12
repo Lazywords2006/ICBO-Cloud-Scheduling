@@ -1,5 +1,6 @@
 package com.icbo.research;
 
+import com.icbo.research.utils.ConvergenceRecord;
 import org.cloudsimplus.cloudlets.Cloudlet;
 import org.cloudsimplus.core.CloudSimPlus;
 import org.cloudsimplus.vms.Vm;
@@ -70,6 +71,10 @@ public class ICBO_Broker extends CBO_Broker {
         int M = cloudletList.size();  // 任务数
         int N = vmList.size();        // VM数
 
+        // ✅ Day 3.1新增：创建收敛记录器
+        String scale = String.format("M%d", M);
+        this.convergenceRecord = new ConvergenceRecord("ICBO", scale, this.seed);
+
         // 初始化种群（调用父类方法）
         initializePopulation(M, N, cloudletList, vmList);
 
@@ -89,6 +94,9 @@ public class ICBO_Broker extends CBO_Broker {
             // 更新全局最优解
             updateBestSolution(M, N, cloudletList, vmList);
 
+            // ✅ Day 3.1新增：记录收敛曲线
+            convergenceRecord.recordIteration(t, bestFitness);
+
             // 每10次迭代打印进度
             if ((t + 1) % 10 == 0 || t == 0) {
                 System.out.println(String.format("[Iteration %3d/%d] Best Makespan: %.4f",
@@ -103,6 +111,9 @@ public class ICBO_Broker extends CBO_Broker {
                     t, omega, bestFitness));
             }
         }
+
+        // ✅ Day 3.1新增：导出收敛曲线到CSV
+        convergenceRecord.exportToCSV("results/");
 
         // 将最优解从连续空间转换为离散空间
         int[] result = new int[M];

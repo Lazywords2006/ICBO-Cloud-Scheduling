@@ -1,5 +1,6 @@
 package com.icbo.research;
 
+import com.icbo.research.utils.ConvergenceRecord;
 import org.cloudsimplus.brokers.DatacenterBrokerSimple;
 import org.cloudsimplus.cloudlets.Cloudlet;
 import org.cloudsimplus.core.CloudSimPlus;
@@ -37,6 +38,7 @@ public class WOA_Broker extends DatacenterBrokerSimple {
 
     protected final Random random;
     protected final long seed;
+    private ConvergenceRecord convergenceRecord;  // ✅ Day 3.1新增：收敛记录器
 
     /**
      * 构造函数（带随机种子）
@@ -105,6 +107,10 @@ public class WOA_Broker extends DatacenterBrokerSimple {
         // 初始化鲸鱼群
         double[][] whales = new double[POPULATION_SIZE][M];  // 鲸鱼位置（连续空间[0,1]）
         double[] fitness = new double[POPULATION_SIZE];      // 适应度
+
+        // ✅ Day 3.1新增：创建收敛记录器
+        String scale = String.format("M%d", M);
+        this.convergenceRecord = new ConvergenceRecord("WOA", scale, this.seed);
 
         // 最优鲸鱼（猎物位置）
         double[] bestPos = new double[M];
@@ -177,7 +183,13 @@ public class WOA_Broker extends DatacenterBrokerSimple {
                 System.out.println(String.format("Iter %3d/%d: Best Makespan = %.4f, a = %.4f",
                         iter + 1, MAX_ITERATIONS, bestScore, a));
             }
+
+            // ✅ Day 3.1新增：记录收敛曲线
+            convergenceRecord.recordIteration(iter, bestScore);
         }
+
+        // ✅ Day 3.1新增：导出收敛曲线到CSV
+        convergenceRecord.exportToCSV("results/");
 
         // 将最优鲸鱼的连续解转换为离散调度方案
         return continuousToDiscrete(bestPos, N);

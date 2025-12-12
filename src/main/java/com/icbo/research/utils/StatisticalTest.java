@@ -138,4 +138,278 @@ public class StatisticalTest {
     public static boolean isSignificant(double pValue) {
         return pValue < 0.05;
     }
+
+    /**
+     * Friedman检验 - 多算法非参数检验
+     *
+     * Friedman检验用于比较多个相关样本（算法）在多个数据集（规模）上的性能
+     * 是Kruskal-Wallis检验的配对版本
+     *
+     * 原假设H0：所有算法的性能相同
+     * 备择假设H1：至少有一个算法的性能不同
+     *
+     * @param data 实验数据矩阵：data[i][j] = 算法i在规模j上的性能
+     *             - 行：算法（k个算法）
+     *             - 列：数据集/规模（N个问题）
+     * @return p-value（<0.05表示算法间存在显著差异）
+     */
+    public static double friedmanTest(double[][] data) {
+        int k = data.length;      // 算法数
+        int N = data[0].length;   // 问题数（规模数）
+
+        // 验证数据完整性
+        for (int i = 0; i < k; i++) {
+            if (data[i].length != N) {
+                throw new IllegalArgumentException("数据矩阵不规则：每个算法必须在所有数据集上有结果");
+            }
+        }
+
+        // Step 1: 对每个数据集（列），对所有算法（行）进行排名（从小到大，1是最好）
+        double[][] ranks = new double[k][N];
+        for (int j = 0; j < N; j++) {
+            // 提取第j列（第j个数据集上所有算法的结果）
+            double[] column = new double[k];
+            for (int i = 0; i < k; i++) {
+                column[i] = data[i][j];
+            }
+
+            // 对这一列进行排名（最小值排名1）
+            double[] columnRanks = rankArray(column);
+
+            // 将排名填回ranks矩阵
+            for (int i = 0; i < k; i++) {
+                ranks[i][j] = columnRanks[i];
+            }
+        }
+
+        // Step 2: 计算每个算法的排名总和
+        double[] rankSums = new double[k];
+        for (int i = 0; i < k; i++) {
+            for (int j = 0; j < N; j++) {
+                rankSums[i] += ranks[i][j];
+            }
+        }
+
+        // Step 3: 计算Friedman统计量χ²
+        // 公式: χ² = (12 * N) / (k * (k+1)) * Σ(R_i²) - 3 * N * (k+1)
+        double sumSquaredRanks = 0.0;
+        for (int i = 0; i < k; i++) {
+            sumSquaredRanks += rankSums[i] * rankSums[i];
+        }
+
+        double chiSquare = (12.0 * N) / (k * (k + 1.0)) * sumSquaredRanks - 3.0 * N * (k + 1.0);
+
+        // Step 4: 计算p-value
+        // Friedman统计量近似服从自由度为(k-1)的χ²分布
+        int degreesOfFreedom = k - 1;
+        org.apache.commons.math3.distribution.ChiSquaredDistribution chiSquaredDist =
+                new org.apache.commons.math3.distribution.ChiSquaredDistribution(degreesOfFreedom);
+
+        // p-value = P(χ² > 观测值)
+        double pValue = 1.0 - chiSquaredDist.cumulativeProbability(chiSquare);
+
+        return pValue;
+    }
+
+    /**
+     * 对数组进行排名（从小到大，最小值排名1）
+     *
+     * 处理并列情况：使用平均排名
+     * 例如：[10, 20, 20, 30] → [1, 2.5, 2.5, 4]
+     *
+     * @param array 输入数组
+     * @return 排名数组
+     */
+    private static double[] rankArray(double[] array) {
+        int n = array.length;
+        double[] ranks = new double[n];
+
+        // 创建索引数组并排序
+        Integer[] indices = new Integer[n];
+        for (int i = 0; i < n; i++) {
+            indices[i] = i;
+        }
+
+        // 按值排序索引
+        java.util.Arrays.sort(indices, (a, b) -> Double.compare(array[a], array[b]));
+
+        // 分配排名（处理并列）
+        int i = 0;
+        while (i < n) {
+            int j = i;
+            // 找到所有相同值的元素
+            while (j < n && array[indices[j]] == array[indices[i]]) {
+                j++;
+            }
+
+            // 计算平均排名（排名从1开始）
+            double averageRank = (i + 1 + j) / 2.0;
+
+            // 分配平均排名给所有并列元素
+            for (int k = i; k < j; k++) {
+                ranks[indices[k]] = averageRank;
+            }
+
+            i = j;
+        }
+
+        return ranks;
+    }
+
+    /**
+     * 计算Friedman检验后的平均排名
+     *
+     * @param data 实验数据矩阵：data[i][j] = 算法i在规模j上的性能
+     * @return 每个算法的平均排名（值越小越好）
+     */
+    public static double[] calculateAverageRanks(double[][] data) {
+        int k = data.length;      // 算法数
+        int N = data[0].length;   // 问题数
+
+        // 对每个数据集进行排名
+        double[][] ranks = new double[k][N];
+        for (int j = 0; j < N; j++) {
+            double[] column = new double[k];
+            for (int i = 0; i < k; i++) {
+                column[i] = data[i][j];
+            }
+            double[] columnRanks = rankArray(column);
+            for (int i = 0; i < k; i++) {
+                ranks[i][j] = columnRanks[i];
+            }
+        }
+
+        // 计算平均排名
+        double[] averageRanks = new double[k];
+        for (int i = 0; i < k; i++) {
+            double sum = 0.0;
+            for (int j = 0; j < N; j++) {
+                sum += ranks[i][j];
+            }
+            averageRanks[i] = sum / N;
+        }
+
+        return averageRanks;
+    }
+
+    /**
+     * Nemenyi后续检验 - 多算法事后多重比较
+     *
+     * 在Friedman检验显著后，使用Nemenyi检验进行算法间两两比较
+     * 计算临界差值（Critical Difference, CD）
+     *
+     * @param k 算法数
+     * @param N 数据集数（规模数）
+     * @param alpha 显著性水平（通常为0.05或0.10）
+     * @return 临界差值CD（如果两个算法的平均排名差>CD，则显著不同）
+     */
+    public static double nemenyiCriticalDifference(int k, int N, double alpha) {
+        // Nemenyi临界值表（alpha=0.05）
+        // 来源：Demšar, J. (2006). Statistical comparisons of classifiers over multiple data sets.
+        //       Journal of Machine learning research, 7(1), 1-30.
+        double[][] qAlphaTable = {
+                // k:   2      3      4      5      6      7      8      9     10
+                /* 0.05 */ {0.0, 1.960, 2.343, 2.569, 2.728, 2.850, 2.949, 3.031, 3.102},
+                /* 0.10 */ {0.0, 1.645, 2.052, 2.291, 2.459, 2.589, 2.693, 2.780, 2.855}
+        };
+
+        // 选择临界值
+        double qAlpha;
+        if (alpha == 0.05 && k >= 2 && k <= 10) {
+            qAlpha = qAlphaTable[0][k - 1];
+        } else if (alpha == 0.10 && k >= 2 && k <= 10) {
+            qAlpha = qAlphaTable[1][k - 1];
+        } else {
+            // 对于k>10或其他alpha值，使用近似公式
+            // qAlpha ≈ z_(alpha/2) * sqrt(2)
+            if (alpha == 0.05) {
+                qAlpha = 1.960 * Math.sqrt(2);
+            } else if (alpha == 0.10) {
+                qAlpha = 1.645 * Math.sqrt(2);
+            } else {
+                throw new IllegalArgumentException("Unsupported alpha: " + alpha);
+            }
+        }
+
+        // 计算临界差值
+        // CD = q_alpha * sqrt(k*(k+1) / (6*N))
+        double CD = qAlpha * Math.sqrt(k * (k + 1.0) / (6.0 * N));
+
+        return CD;
+    }
+
+    /**
+     * Friedman检验结果对象
+     */
+    public static class FriedmanTestResult {
+        public final double pValue;
+        public final double chiSquare;
+        public final double[] averageRanks;
+        public final double criticalDifference;
+        public final boolean isSignificant;
+
+        public FriedmanTestResult(double pValue, double chiSquare, double[] averageRanks,
+                                   double criticalDifference, boolean isSignificant) {
+            this.pValue = pValue;
+            this.chiSquare = chiSquare;
+            this.averageRanks = averageRanks;
+            this.criticalDifference = criticalDifference;
+            this.isSignificant = isSignificant;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("Friedman Test: χ²=%.4f, p=%.4e (%s), CD=%.4f",
+                    chiSquare, pValue, interpretPValue(pValue), criticalDifference);
+        }
+    }
+
+    /**
+     * 完整的Friedman检验分析（包括后续检验）
+     *
+     * @param data 实验数据矩阵
+     * @param alpha 显著性水平（默认0.05）
+     * @return Friedman检验完整结果
+     */
+    public static FriedmanTestResult friedmanTestFull(double[][] data, double alpha) {
+        int k = data.length;
+        int N = data[0].length;
+
+        double pValue = friedmanTest(data);
+        double[] averageRanks = calculateAverageRanks(data);
+
+        // 计算χ²统计量（用于报告）
+        double[] rankSums = new double[k];
+        for (int i = 0; i < k; i++) {
+            for (int j = 0; j < N; j++) {
+                // 重新计算排名（效率不高但代码清晰）
+                double[] column = new double[k];
+                for (int ii = 0; ii < k; ii++) {
+                    column[ii] = data[ii][j];
+                }
+                double[] columnRanks = rankArray(column);
+                rankSums[i] += columnRanks[i];
+            }
+        }
+        double sumSquaredRanks = 0.0;
+        for (int i = 0; i < k; i++) {
+            sumSquaredRanks += rankSums[i] * rankSums[i];
+        }
+        double chiSquare = (12.0 * N) / (k * (k + 1.0)) * sumSquaredRanks - 3.0 * N * (k + 1.0);
+
+        // 计算临界差值
+        double CD = nemenyiCriticalDifference(k, N, alpha);
+
+        // 判断显著性
+        boolean isSignificant = pValue < alpha;
+
+        return new FriedmanTestResult(pValue, chiSquare, averageRanks, CD, isSignificant);
+    }
+
+    /**
+     * 完整的Friedman检验分析（使用默认alpha=0.05）
+     */
+    public static FriedmanTestResult friedmanTestFull(double[][] data) {
+        return friedmanTestFull(data, 0.05);
+    }
 }
